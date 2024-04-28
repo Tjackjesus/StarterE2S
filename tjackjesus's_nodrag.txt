@@ -1,0 +1,27 @@
+@name Tjackjesus's NoDrag
+@inputs MainProp:entity
+@outputs 
+@persist 
+@trigger 
+@strict
+
+interval(1000)
+    if (MainProp:isValid()) {
+        ConnectedProps = MainProp:getConnectedEntities()
+
+        
+        for(I = 1, ConnectedProps:count()) {
+            
+            P = ConnectedProps[I, entity]
+            
+            
+            P:propDrag(0)
+        }
+    }
+
+
+
+
+
+
+
