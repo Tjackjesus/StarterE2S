@@ -1,0 +1,89 @@
+@name Tjackjesus Complete Carchip
+@inputs W A S D Startkey [Chassis Engine Frontleftwheel Frontrightwheel Frontdiff Rearleftwheel Rearrightwheel Reardiff]:entity CurrentGear RPM ReverseButton
+@outputs Turn Active Throttle Brake Gear Constant Damping
+@persist SteeringMaster:entity
+@model models/sprops/rectangles/size_2/rect_12x12x3.mdl
+
+        # Hello! Thanks for using my E2, Youre free to use it as you wish, but please dont take credit for it. -Tjackjesus
+
+     # Features of this E2!
+# Variable Steering | Autoshift | Suspension Handling | Throttle&Brake Control | Ignition | ACF Autolinking for 2WD/4WD 
+
+runOnTick(1)
+ 
+  ## CUSTOMISABLE VALUES
+
+TurnRate = 2               # Range from 1 to 5, 5 is sensitive
+
+MinTurnSpeed = 100         # The speed at where the steering stops being affected by speed (in km/h)
+MaxTurnAngle = 30          # Turn angle at low speeds
+MinTurnAngle = 20          # Turn angle at MinTurnSpeed
+
+Constant = 10000           # Suspension Constant
+Damping = 1000             # Suspension Damping
+
+USR = 6000                 # UpShiftRPM, The RPM at which your car will shift up once, Preferably keep these 2 values within the powerband of your engine
+DSR = 3000                 # DownShiftRPM, The RPM at whick you carw will shift down once                  
+
+Mingear = 0
+Maxgear = 7                # Max FORWARD gear, so if you have a 8 speed gearbox, and 8 is reverse, you put 7 here.
+Reversegear = 8            # The gear your reverse is on
+
+IdleBrake = 0              # Amount of braking when not pressing the brake or W, Usually this should be 0
+IdleThrottle = 0           # Amount of throttle given when not pressing W, should be set to 0 unless you want heightened idle.
+                           # Recomended to keep under 5
+
+        ## END OF CUSTOMISABLE VALUES
+
+
+
+                 # Nuh uh!
+
+## EDITING BELOW CODE MAY COMPROMISE CODE INTEGRITY
+
+if (Engine:isValid()) {Engine:acfDisableRevLimiter(1)}
+
+Brake = IdleBrake
+Throttle = IdleThrottle
+
+if (W&!S) {Throttle=100, Brake = 0}
+
+if (S) {Brake=100}
+
+if (Startkey &~Startkey) {Active = 1 - Active}
+
+if (RPM>USR&CurrentGear<Maxgear&!~CurrentGear&!ReverseButton) {Gear = CurrentGear + 1}
+if (RPM<DSR&CurrentGear>Mingear&!~CurrentGear&!ReverseButton) {Gear = CurrentGear - 1}
+
+if (ReverseButton) {Gear = Reversegear} 
+if (~ReverseButton&CurrentGear==8) {Gear = 1}
+
+if (Frontdiff:isValid()) {
+        FrontLinks = Frontdiff:acfLinks()
+if (FrontLinks:count() < 3) 
+{   Frontdiff:acfLinkTo(Frontleftwheel, 0)
+    Frontdiff:acfLinkTo(Frontrightwheel, 0)   } 
+}
+
+if (Reardiff:isValid()){
+        RearLinks = Reardiff:acfLinks()
+if (RearLinks:count() < 3) 
+{   Reardiff:acfLinkTo(Rearleftwheel, 0)
+    Reardiff:acfLinkTo(Rearrightwheel, 0)   } 
+}
+
+if (first() | dupefinished()){   
+    SteeringMaster = entity()
+}
+
+
+local SpdVariation = MaxTurnAngle - MinTurnAngle
+local Divisor = MinTurnSpeed / SpdVariation
+TurnAngle = clamp(MaxTurnAngle-(toUnit("km/h",abs(Chassis:velL():x()))/Divisor),MinTurnAngle,MaxTurnAngle)
+
+ 
+   if(!SteeringMaster:isPlayerHolding()){
+       Turn += clamp((A-D)*TurnAngle - Turn, -TurnRate, TurnRate)
+    SteeringMaster:setAng( Chassis:toWorld(ang(0, Turn, 0)) )
+    SteeringMaster:propFreeze(1)
+}

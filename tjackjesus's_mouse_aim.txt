@@ -1,0 +1,83 @@
+@name TjackJesus's Mouse Aim
+@inputs EyepodX EyepodY Active [Chassis AimPlate CamPlate CameraPosition]:entity CamController:wirelink
+@outputs EnableEyePod
+@persist PitchCL YawCL CPitchCL CYawCL
+@trigger 
+@strict
+
+
+# Customizable Values
+    RotationSpeed = 3 
+    ElevationSpeed = 3 
+
+    Sensitivity = 1
+
+
+
+
+#         Nuh uh!
+
+# Don't touchy touchy code after this if you don't know what half of it means
+EnableEyePod = Active
+
+CamController["Activated"] = Active
+CamController["Parent", entity] = CameraPosition
+
+
+event tick()
+{ 
+PitchCL += clamp((EyepodX*Sensitivity)*1 - PitchCL, -ElevationSpeed, ElevationSpeed)
+YawCL += clamp((EyepodY*Sensitivity)*1 - YawCL, -RotationSpeed, RotationSpeed)
+    CPitchCL += clamp((EyepodX*Sensitivity)*1 - CPitchCL, -8, 8)
+    CYawCL += clamp((EyepodY*Sensitivity)*1 - CYawCL, -8, 8) 
+
+if(AimPlate:isValid() && Active) 
+    {
+        if(!AimPlate:isPlayerHolding()) {AimPlate:propFreeze(1)}
+if(!CamPlate:isPlayerHolding()) {CamPlate:propFreeze(1)}
+
+     AimPlate:setAng(Chassis:toWorld(ang(YawCL/2,-PitchCL/2,0)))
+     CamPlate:setAng(Chassis:toWorld(ang(0,-CPitchCL/2+90,CYawCL/2))) 
+    }
+}
+
+runOnChat(1)
+
+if (first()) {print(_HUD_PRINTCENTER, "Not sure what you're doing, or how this E2 works? Type the word instructions in the chat for help")}
+LastSaid = owner():lastSaid()
+
+if(changed(owner():lastSaid()))
+{
+    if (LastSaid=="instructions") 
+    {
+print(_HUD_PRINTCENTER, "First off spawn a Pod controller, Cam Controller, Eye Pod and connect them to the seat
+\n Wire Active on E2 to active on Pod Controller. EyepodX, EyepodY to X Y on the Eye Pod.
+\n   Spawn 2 props and wire AimPlate to one and Camplate to the other")
+timer("help2", 5000)
+    }
+}  
+
+if(clk("help2")) 
+{
+print(_HUD_PRINTCENTER,
+"Now wire Enable from eyepod to EnableEyePod on your E2, And wire Camcontroller wirelink to your Cam Controller
+\n Wire Chassis:entity from your E2 to your Chassis, AKA The baseplate.
+\n Type Settings to see the settings for eyepod and cam controller.")
+timer("credits", 5000) 
+}
+
+if(clk("credits")) {
+print(_HUD_PRINTCENTER, 
+"This is basically a car setang, you ballsocket lock this to whatever you want to have aiming.
+\n CameraPosition is where you want the camera to be.
+\n But that should be all! Enjoy the E2, there are 3 Customizable values in it. -Tjackjesus")}
+
+if (LastSaid=="settings") 
+{
+print( 
+"Eye Pod Settings. - Output Cumulative Mouse Positon = YES.   Default to zero = NO. X and Y, Min and max all at 0
+\n qCam Controller Settings. - Coordinates local to parent = YES. - Client Side Movement = YES. - Free Movement = NO. - Localized Movement = YES. - Draw Parent = No.                
+\n I know i skipped some, but its only because they are up to personal preference")
+}
+
+# Written by Tjackjesus, AKA MediumMike
